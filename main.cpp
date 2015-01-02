@@ -3,6 +3,7 @@
 #include <getopt.h>
 
 #include <AppFileInfo.h>
+#include <Application.h>
 #include <Bitmap.h>
 #include <BitmapStream.h>
 #include <File.h>
@@ -46,7 +47,9 @@ int main(int argc, char** argv)
 	
 	if (optind >= argc)
 		print_help(*argv);
-	
+
+	BApplication app("application/x-vnd.IconWrangler");
+		
 	while (optind < argc) {
 		char *fileName = argv[optind++];
 		
@@ -64,12 +67,24 @@ int main(int argc, char** argv)
 		BAppFileInfo appInfo(&file);
 
 		BBitmap miniBitmap(BRect(0, 0, 15, 15), B_BITMAP_NO_SERVER_LINK,
-			B_CMAP8);
+			B_RGBA32);
 
 		BBitmap largeBitmap(BRect(0, 0, 31, 31), B_BITMAP_NO_SERVER_LINK,
-			B_CMAP8);
+			B_RGBA32);
 		
-		status_t status;
+		if (miniBitmap.InitCheck() != B_OK) {
+			fprintf(stderr, "Creating mini bitmap failed: %s\n",
+				strerror(miniBitmap.InitCheck()));
+			exit(1);
+		}
+		
+		if (largeBitmap.InitCheck() != B_OK) {
+			fprintf(stderr, "Creating large bitmap failed: %s\n",
+				strerror(miniBitmap.InitCheck()));
+			exit(1);
+		}
+		
+		status_t status = B_OK;
 
 		status = appInfo.GetIcon(&miniBitmap, B_MINI_ICON);
 		if (status != B_OK) {
@@ -87,15 +102,7 @@ int main(int argc, char** argv)
 
 		BTranslatorRoster *roster = BTranslatorRoster::Default();
 
-		BBitmap miniColorBitmap(BRect(0, 0, 15, 15), B_BITMAP_NO_SERVER_LINK,
-			B_RGB32);
-		BBitmap largeColorBitmap(BRect(0, 0, 31, 31), B_BITMAP_NO_SERVER_LINK,
-			B_RGB32);
-
-		miniColorBitmap.ImportBits(&miniBitmap);
-		largeColorBitmap.ImportBits(&largeBitmap);
-
-		BBitmapStream miniBitmapStream(&miniColorBitmap);
+		BBitmapStream miniBitmapStream(&miniBitmap);
 		BString miniFileName;
 		miniFileName.SetToFormat("%s-icon_16.png", filePath.Leaf());
 		BFile miniFile(miniFileName, B_READ_WRITE | B_CREATE_FILE);
@@ -122,7 +129,7 @@ int main(int argc, char** argv)
 		miniBitmapStream.DetachBitmap(&miniDummy);
 
 
-		BBitmapStream largeBitmapStream(&largeColorBitmap);
+		BBitmapStream largeBitmapStream(&largeBitmap);
 		BString largeFileName;
 		largeFileName.SetToFormat("%s-icon_32.png", filePath.Leaf());
 		BFile largeFile(largeFileName, B_READ_WRITE | B_CREATE_FILE);
