@@ -57,56 +57,69 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 		
+		fprintf(stderr, "Processing '%s'\n", fileName);
+		
 		BPath filePath(fileName);
 		
 		BAppFileInfo appInfo(&file);
 
-		BBitmap mediumBitmap(BRect(0, 0, 15, 15), B_BITMAP_NO_SERVER_LINK,
+		BBitmap miniBitmap(BRect(0, 0, 15, 15), B_BITMAP_NO_SERVER_LINK,
 			B_CMAP8);
 
 		BBitmap largeBitmap(BRect(0, 0, 31, 31), B_BITMAP_NO_SERVER_LINK,
 			B_CMAP8);
 		
-		appInfo.GetIcon(&mediumBitmap, B_MINI_ICON);
-		appInfo.GetIcon(&largeBitmap, B_LARGE_ICON);
+		status_t status;
+
+		status = appInfo.GetIcon(&miniBitmap, B_MINI_ICON);
+		if (status != B_OK) {
+			fprintf(stderr, "Unable to get mini icon: %s\n",
+				strerror(status));
+			exit(1);
+		}
+
+		status = appInfo.GetIcon(&largeBitmap, B_LARGE_ICON);
+		if (status != B_OK) {
+			fprintf(stderr, "Unable to get large icon: %s\n",
+				strerror(status));
+			exit(1);
+		}
 
 		BTranslatorRoster *roster = BTranslatorRoster::Default();
 
-		status_t status;
-
-		BBitmap mediumColorBitmap(BRect(0, 0, 15, 15), B_BITMAP_NO_SERVER_LINK,
+		BBitmap miniColorBitmap(BRect(0, 0, 15, 15), B_BITMAP_NO_SERVER_LINK,
 			B_RGB32);
 		BBitmap largeColorBitmap(BRect(0, 0, 31, 31), B_BITMAP_NO_SERVER_LINK,
 			B_RGB32);
 
-		mediumColorBitmap.ImportBits(&mediumBitmap);
+		miniColorBitmap.ImportBits(&miniBitmap);
 		largeColorBitmap.ImportBits(&largeBitmap);
 
-		BBitmapStream mediumBitmapStream(&mediumColorBitmap);
-		BString mediumFileName;
-		mediumFileName.SetToFormat("%s-icon_16.png", filePath.Leaf());
-		BFile mediumFile(mediumFileName, B_READ_WRITE | B_CREATE_FILE);
+		BBitmapStream miniBitmapStream(&miniColorBitmap);
+		BString miniFileName;
+		miniFileName.SetToFormat("%s-icon_16.png", filePath.Leaf());
+		BFile miniFile(miniFileName, B_READ_WRITE | B_CREATE_FILE);
 		
-		if (mediumFile.InitCheck() != B_OK) {
+		if (miniFile.InitCheck() != B_OK) {
 			fprintf(stderr, "Creating file failed: %s\n",
-				strerror(mediumFile.InitCheck()));
+				strerror(miniFile.InitCheck()));
 			exit(1);
 		}
 		
-		status = roster->Translate(&mediumBitmapStream, NULL, NULL, &mediumFile,
+		status = roster->Translate(&miniBitmapStream, NULL, NULL, &miniFile,
 			B_PNG_FORMAT);
 
 		if (status != B_OK) {
-			fprintf(stderr, "Error converting medium icon to PNG: %s\n",
+			fprintf(stderr, "Error converting mini icon to PNG: %s\n",
 				strerror(status));
 			exit(1);
 		}
 		
-		fprintf(stderr, "Written medium image to ");
+		fprintf(stderr, "Written mini image to ");
 		fprintf(stdout, "%s-icon_16.png\n", filePath.Leaf());
 
-		BBitmap *mediumDummy = NULL;
-		mediumBitmapStream.DetachBitmap(&mediumDummy);
+		BBitmap *miniDummy = NULL;
+		miniBitmapStream.DetachBitmap(&miniDummy);
 
 
 		BBitmapStream largeBitmapStream(&largeColorBitmap);
@@ -124,7 +137,7 @@ int main(int argc, char** argv)
 			B_PNG_FORMAT);
 
 		if (status != B_OK) {
-			fprintf(stderr, "Error converting medium icon to PNG: %s\n",
+			fprintf(stderr, "Error converting mini icon to PNG: %s\n",
 				strerror(status));
 			exit(1);
 		}
