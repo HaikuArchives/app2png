@@ -15,6 +15,7 @@
 
 void
 print_help(const char *firstarg) {
+	fprintf(stderr, " Creates PNG files out of the legacy icons of an app\n");
 	fprintf(stderr, "Usage: %s [-h, --help] file1 [file2 [file3 [etc...]]]\n",
 		firstarg);
 	exit(0);

@@ -5,7 +5,7 @@
 ## architecture of Haiku.
 
 # The name of the binary.
-NAME = IconWrangler
+NAME = app2png
 
 # The type of binary, must be one of:
 #	APP:	Application
