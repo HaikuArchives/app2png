@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <getopt.h>
 
 #include <AppFileInfo.h>
@@ -21,6 +22,15 @@ print_help(const char *firstarg) {
 	exit(0);
 }
 
+bool output_piped = false;
+
+void file_made(const char *informational, const char *name, int size) {
+	fprintf(stderr, informational);
+	fflush(stdout);
+	fprintf(stdout, "%s-icon_%d.png\n", name, size);
+	if (output_piped)
+		fprintf(stderr, "%s-icon_%d.png\n", name, size);
+}
 
 
 int main(int argc, char** argv)
@@ -50,7 +60,8 @@ int main(int argc, char** argv)
 		print_help(*argv);
 
 	BApplication app("application/x-vnd.IconWrangler");
-		
+	output_piped = !isatty(fileno(stdout));
+
 	while (optind < argc) {
 		char *fileName = argv[optind++];
 		
@@ -123,8 +134,7 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 		
-		fprintf(stderr, "Written mini image to ");
-		fprintf(stdout, "%s-icon_16.png\n", filePath.Leaf());
+		file_made("Written mini image to ", filePath.Leaf(), 16);
 
 		BBitmap *miniDummy = NULL;
 		miniBitmapStream.DetachBitmap(&miniDummy);
@@ -145,7 +155,7 @@ int main(int argc, char** argv)
 			B_PNG_FORMAT);
 
 		if (status != B_OK) {
-			fprintf(stderr, "Error converting mini icon to PNG: %s\n",
+			fprintf(stderr, "Error converting large icon to PNG: %s\n",
 				strerror(status));
 			exit(1);
 		}
@@ -153,8 +163,7 @@ int main(int argc, char** argv)
 		BBitmap *largeDummy = NULL;
 		largeBitmapStream.DetachBitmap(&largeDummy);
 		
-		fprintf(stderr, "Written large image to ");
-		fprintf(stdout, "%s-icon_32.png\n", filePath.Leaf());
+		file_made("Written large image to ", filePath.Leaf(), 32);
 	}
 	
 	return 0;
